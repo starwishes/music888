@@ -59,23 +59,48 @@ module.exports = async (req, res) => {
     }
 
     try {
+        const parsedUrl = new URL(decodedUrl);
+
+        // NOTE: 根据目标域名动态设置 Referer
+        let referer = 'https://music.163.com/';
+        if (parsedUrl.hostname.includes('qq.com')) {
+            referer = 'https://y.qq.com/';
+        } else if (parsedUrl.hostname.includes('kugou.com')) {
+            referer = 'https://www.kugou.com/';
+        } else if (parsedUrl.hostname.includes('migu.cn')) {
+            referer = 'https://music.migu.cn/';
+        }
 
         const response = await fetch(decodedUrl, {
             headers: {
-                'Referer': 'https://y.qq.com/',
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.150 Safari/537.36'
+                'Referer': referer,
+                'Origin': referer.replace(/\/$/, ''),
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
             }
         });
 
         if (!response.ok) {
-            return res.status(response.status).json({ error: `API responded with status: ${response.status}` });
+            console.error(`Proxy upstream error: ${response.status} for ${decodedUrl.substring(0, 100)}`);
+            return res.status(response.status).json({ error: `Upstream API responded with status: ${response.status}` });
         }
 
-        res.setHeader('Content-Type', response.headers.get('content-type'));
+        // NOTE: 设置音频流响应头
+        const contentType = response.headers.get('content-type') || 'audio/mpeg';
+        const contentLength = response.headers.get('content-length');
+
+        res.setHeader('Content-Type', contentType);
+        res.setHeader('Accept-Ranges', 'bytes');
+        res.setHeader('Access-Control-Allow-Origin', '*');
+
+        if (contentLength) {
+            res.setHeader('Content-Length', contentLength);
+        }
+
+        // NOTE: 将响应流管道传输到客户端
         response.body.pipe(res);
 
     } catch (error) {
-        console.error('Proxy error:', error);
-        res.status(500).json({ error: 'Failed to proxy request' });
+        console.error('Proxy error:', error.message);
+        res.status(500).json({ error: 'Failed to proxy request', details: error.message });
     }
 };
