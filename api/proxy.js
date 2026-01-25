@@ -5,7 +5,24 @@ const ALLOWED_HOSTS = [
     'music-api.gdstudio.xyz',
     'y.qq.com',
     'music.163.com',
-    'interface.music.163.com'
+    'interface.music.163.com',
+    // 网易云音乐 CDN (音频流)
+    'music.126.net',
+    'm7.music.126.net',
+    'm8.music.126.net',
+    'm701.music.126.net',
+    'm801.music.126.net',
+    'p1.music.126.net',
+    'p2.music.126.net',
+    // QQ 音乐 CDN
+    'dl.stream.qqmusic.qq.com',
+    'ws.stream.qqmusic.qq.com',
+    'isure.stream.qqmusic.qq.com',
+    // 酷狗音乐 CDN
+    'trackercdn.kugou.com',
+    'webfs.tx.kugou.com',
+    // 咪咕音乐 CDN
+    'freetyst.nf.migu.cn'
 ];
 
 /**

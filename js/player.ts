@@ -129,7 +129,22 @@ export async function playSong(index: number, playlist: Song[], containerId: str
                 );
             }
 
-            audioPlayer.src = urlData.url.replace(/^http:/, 'https:');
+            // NOTE: 对于外部 CDN 音频，通过代理转发以绕过 CORS 限制
+            let audioUrl = urlData.url.replace(/^http:/, 'https:');
+
+            // 检查是否是外部 CDN 域名（需要代理）
+            const needsProxy = audioUrl.includes('music.126.net') ||
+                audioUrl.includes('stream.qqmusic.qq.com') ||
+                audioUrl.includes('kugou.com') ||
+                audioUrl.includes('migu.cn');
+
+            if (needsProxy) {
+                // 使用 Vercel 代理转发音频请求
+                audioUrl = `/api/proxy?url=${encodeURIComponent(audioUrl)}`;
+                console.log('使用代理加载音频');
+            }
+
+            audioPlayer.src = audioUrl;
             audioPlayer.load();
 
             const lyricsData = await api.getLyrics(song);
