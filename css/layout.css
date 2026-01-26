@@ -62,9 +62,13 @@
     flex-direction: column;
 }
 
-.content-section {
+.content-section,
+.player-section,
+.lyrics-section {
     min-width: 0;
     height: calc(100vh - 180px);
+    overflow: hidden;
+    /* Prevent overflow from breaking layout */
 }
 
 .section-title {

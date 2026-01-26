@@ -480,6 +480,11 @@
     color: #ff6b6b;
 }
 
+.action-btn.download-icon-btn:hover {
+    background: rgba(100, 180, 246, 0.2);
+    color: #64b5f6;
+}
+
 .song-info {
     flex: 1;
     min-width: 0;

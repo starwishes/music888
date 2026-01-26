@@ -1,4 +1,4 @@
-import { Song } from './api';
+import { Song, getSongUrl } from './api';
 import * as player from './player';
 import { LyricLine } from './player';
 import { escapeHtml, formatTime, getElement } from './utils';
@@ -107,8 +107,8 @@ function renderSongItems(songs: Song[], startIndex: number, container: HTMLEleme
                 <button class="action-btn favorite-btn" title="添加到我的喜欢" aria-label="添加到我的喜欢">
                     <i class="${favoriteIconClass}" style="${favoriteStyle}"></i>
                 </button>
-                <button class="action-btn play-icon-btn" title="播放" aria-label="播放">
-                    <i class="fas fa-play"></i>
+                <button class="action-btn download-icon-btn" title="下载" aria-label="下载">
+                    <i class="fas fa-download"></i>
                 </button>
             </div>
         `;
@@ -141,11 +141,42 @@ function renderSongItems(songs: Song[], startIndex: number, container: HTMLEleme
             });
         }
 
-        const playIconBtn = songItem.querySelector('.play-icon-btn');
-        if (playIconBtn) {
-            playIconBtn.addEventListener('click', (e) => {
+        const downloadIconBtn = songItem.querySelector('.download-icon-btn');
+        if (downloadIconBtn) {
+            downloadIconBtn.addEventListener('click', async (e) => {
                 e.stopPropagation();
-                player.playSong(index, playlistForPlayback, currentScrollState ? currentScrollState.containerId : 'searchResults');
+                // 简单的防止重复点击
+                const btn = e.currentTarget as HTMLButtonElement;
+                if (btn.disabled) return;
+
+                try {
+                    btn.disabled = true;
+                    btn.style.opacity = '0.5';
+                    showNotification('正在获取下载链接...', 'info');
+
+                    const result = await getSongUrl(song, '320000'); // 默认尝试下载高品质
+                    if (result && result.url) {
+                        // 创建临时链接下载
+                        // NOTE: 由于跨域问题，可能无法直接触发下载，而是打开新窗口
+                        const link = document.createElement('a');
+                        link.href = result.url;
+                        link.target = '_blank';
+                        // 尝试设置下载文件名 (仅同源有效)
+                        link.download = `${song.name} - ${Array.isArray(song.artist) ? song.artist.join(',') : song.artist}.mp3`;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        showNotification('已开始下载/打开链接', 'success');
+                    } else {
+                        showNotification('无法获取下载链接', 'error');
+                    }
+                } catch (error) {
+                    console.error('下载失败:', error);
+                    showNotification('下载出错，请重试', 'error');
+                } finally {
+                    btn.disabled = false;
+                    btn.style.opacity = '';
+                }
             });
         }
 
