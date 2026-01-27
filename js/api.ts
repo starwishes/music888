@@ -334,6 +334,97 @@ function isProbablyPreview(url: string): boolean {
     return previewPatterns.some(pattern => pattern.test(url));
 }
 
+/**
+ * 备选音乐源列表，用于跨源搜索
+ * NOTE: 当主源返回试听版本时，尝试从这些源获取完整版本
+ */
+const FALLBACK_SOURCES = ['kuwo', 'kugou', 'migu', 'tencent'];
+
+/**
+ * 从指定音乐源直接获取歌曲 URL（内部函数）
+ */
+async function getSongUrlFromSource(
+    songId: string,
+    source: string,
+    quality: string
+): Promise<SongUrlResult | null> {
+    const gdstudioUrl = getGDStudioApiUrl();
+    
+    try {
+        const response = await fetchWithRetry(
+            `${gdstudioUrl}?types=url&source=${source}&id=${songId}&br=${quality}`
+        );
+        const data: GDStudioUrlResponse = await response.json();
+        
+        if (data?.url) {
+            return { url: data.url, br: String(data.br || quality) };
+        }
+    } catch (e) {
+        console.warn(`从 ${source} 获取 URL 失败:`, e);
+    }
+    return null;
+}
+
+/**
+ * 跨音乐源搜索同名歌曲
+ * NOTE: 当主源返回试听版本时，尝试从其他源搜索同名歌曲
+ */
+async function searchSongFromOtherSources(
+    songName: string,
+    artistName: string,
+    excludeSource: string,
+    quality: string
+): Promise<SongUrlResult | null> {
+    const gdstudioUrl = getGDStudioApiUrl();
+    const searchKeyword = `${songName} ${artistName}`;
+    
+    console.log(`尝试从其他音乐源搜索: ${searchKeyword}`);
+    
+    for (const source of FALLBACK_SOURCES) {
+        if (source === excludeSource) continue;
+        
+        try {
+            console.log(`尝试从 ${source} 搜索...`);
+            const response = await fetchWithRetry(
+                `${gdstudioUrl}?types=search&source=${source}&name=${encodeURIComponent(searchKeyword)}&count=5`
+            );
+            const data = await response.json();
+            
+            // 解析搜索结果
+            let songs: GDStudioSong[] = [];
+            if (Array.isArray(data)) {
+                songs = data as GDStudioSong[];
+            } else if (typeof data === 'object' && data !== null) {
+                const values = Object.values(data);
+                songs = values.filter((item): item is GDStudioSong => {
+                    return !!(item && typeof item === 'object' && 'id' in item && 'name' in item);
+                }) as GDStudioSong[];
+            }
+            
+            // 查找匹配的歌曲（名称相似）
+            for (const song of songs) {
+                // 简单的名称匹配：检查歌曲名是否包含在搜索结果中
+                const normalizedSongName = songName.toLowerCase().replace(/\s+/g, '');
+                const normalizedResultName = song.name.toLowerCase().replace(/\s+/g, '');
+                
+                if (normalizedResultName.includes(normalizedSongName) ||
+                    normalizedSongName.includes(normalizedResultName)) {
+                    // 尝试获取这首歌的 URL
+                    const urlResult = await getSongUrlFromSource(song.id, source, quality);
+                    if (urlResult && urlResult.url && !isProbablyPreview(urlResult.url)) {
+                        console.log(`从 ${source} 找到完整版本:`, urlResult.url.substring(0, 50) + '...');
+                        return urlResult;
+                    }
+                }
+            }
+        } catch (e) {
+            console.warn(`从 ${source} 搜索失败:`, e);
+        }
+    }
+    
+    return null;
+}
+
 export async function getSongUrl(song: Song, quality: string): Promise<SongUrlResult> {
     const gdstudioUrl = getGDStudioApiUrl();
     const necUrl = currentAPI.type === 'nec' ? currentAPI.url : 'https://nec8.de5.net';
@@ -434,6 +525,22 @@ export async function getSongUrl(song: Song, quality: string): Promise<SongUrlRe
         }
     } catch (e) {
         console.warn('Meting API 请求失败:', e);
+    }
+
+    // 5. 第五优先级：跨音乐源搜索（当所有候选都是试听版本时）
+    // NOTE: 尝试从其他音乐源搜索同名歌曲获取完整版本
+    if (candidates.length > 0) {
+        console.log('所有候选可能是试听版本，尝试跨源搜索...');
+        const artistName = Array.isArray(song.artist) ? song.artist[0] : song.artist;
+        const crossSourceResult = await searchSongFromOtherSources(
+            song.name,
+            artistName,
+            source,
+            quality
+        );
+        if (crossSourceResult) {
+            return crossSourceResult;
+        }
     }
 
     // 如果所有 URL 都可能是试听版本，返回第一个候选
