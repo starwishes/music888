@@ -79,9 +79,20 @@ module.exports = async (req, res) => {
     try {
         const parsedUrl = new URL(decodedUrl);
 
-        // NOTE: 根据目标域名动态设置 Referer
+        // NOTE: 根据目标域名动态设置 Referer 和其他请求头
         let referer = 'https://music.163.com/';
-        if (parsedUrl.hostname.includes('qq.com')) {
+        let extraHeaders = {};
+        
+        if (parsedUrl.hostname.includes('gdstudio.xyz')) {
+            // GDStudio API 需要特殊的请求头
+            referer = 'https://music-api.gdstudio.xyz/';
+            extraHeaders = {
+                'Accept': 'application/json, text/plain, */*',
+                'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
+                'Cache-Control': 'no-cache',
+                'Pragma': 'no-cache',
+            };
+        } else if (parsedUrl.hostname.includes('qq.com')) {
             referer = 'https://y.qq.com/';
         } else if (parsedUrl.hostname.includes('kugou.com')) {
             referer = 'https://www.kugou.com/';
@@ -99,7 +110,8 @@ module.exports = async (req, res) => {
             headers: {
                 'Referer': referer,
                 'Origin': referer.replace(/\/$/, ''),
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                ...extraHeaders
             }
         });
 

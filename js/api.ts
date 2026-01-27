@@ -68,6 +68,40 @@ const API_SOURCES: ApiSource[] = [
 
 let currentAPI = API_SOURCES[0];
 
+// NOTE: GDStudio API 可用性缓存，避免重复请求不可用的 API
+let gdstudioApiAvailable: boolean | null = null;
+let gdstudioApiLastCheck: number = 0;
+const GDSTUDIO_CACHE_TTL = 5 * 60 * 1000; // 5 分钟缓存
+
+/**
+ * 检查 GDStudio API 是否可用（带缓存）
+ */
+function isGDStudioApiAvailable(): boolean {
+    const now = Date.now();
+    // 如果缓存过期或未检测，返回 true 让它尝试
+    if (gdstudioApiAvailable === null || now - gdstudioApiLastCheck > GDSTUDIO_CACHE_TTL) {
+        return true;
+    }
+    return gdstudioApiAvailable;
+}
+
+/**
+ * 标记 GDStudio API 为不可用
+ */
+function markGDStudioApiUnavailable(): void {
+    gdstudioApiAvailable = false;
+    gdstudioApiLastCheck = Date.now();
+    console.warn('GDStudio API 标记为不可用，将在 5 分钟后重试');
+}
+
+/**
+ * 标记 GDStudio API 为可用
+ */
+function markGDStudioApiAvailable(): void {
+    gdstudioApiAvailable = true;
+    gdstudioApiLastCheck = Date.now();
+}
+
 // NOTE: 代理端点路径，用于解决 CORS 问题
 const PROXY_ENDPOINT = '/api/proxy';
 
@@ -348,19 +382,32 @@ async function getSongUrlFromSource(
     source: string,
     quality: string
 ): Promise<SongUrlResult | null> {
+    // NOTE: 检查 GDStudio API 是否可用
+    if (!isGDStudioApiAvailable()) {
+        console.log('GDStudio API 暂时不可用，跳过');
+        return null;
+    }
+    
     const gdstudioUrl = getGDStudioApiUrl();
     
     try {
         const response = await fetchWithRetry(
-            `${gdstudioUrl}?types=url&source=${source}&id=${songId}&br=${quality}`
+            `${gdstudioUrl}?types=url&source=${source}&id=${songId}&br=${quality}`,
+            {},
+            1  // 减少重试次数
         );
         const data: GDStudioUrlResponse = await response.json();
         
         if (data?.url) {
+            markGDStudioApiAvailable();
             return { url: data.url, br: String(data.br || quality) };
         }
     } catch (e) {
         console.warn(`从 ${source} 获取 URL 失败:`, e);
+        // 如果是 403 错误，标记 API 不可用
+        if (e instanceof MusicError && e.message.includes('403')) {
+            markGDStudioApiUnavailable();
+        }
     }
     return null;
 }
@@ -375,6 +422,12 @@ async function searchSongFromOtherSources(
     excludeSource: string,
     quality: string
 ): Promise<SongUrlResult | null> {
+    // NOTE: 检查 GDStudio API 是否可用
+    if (!isGDStudioApiAvailable()) {
+        console.log('GDStudio API 暂时不可用，跳过跨源搜索');
+        return null;
+    }
+    
     const gdstudioUrl = getGDStudioApiUrl();
     const searchKeyword = `${songName} ${artistName}`;
     
@@ -386,7 +439,9 @@ async function searchSongFromOtherSources(
         try {
             console.log(`尝试从 ${source} 搜索...`);
             const response = await fetchWithRetry(
-                `${gdstudioUrl}?types=search&source=${source}&name=${encodeURIComponent(searchKeyword)}&count=5`
+                `${gdstudioUrl}?types=search&source=${source}&name=${encodeURIComponent(searchKeyword)}&count=5`,
+                {},
+                1  // 减少重试次数
             );
             const data = await response.json();
             
@@ -462,23 +517,33 @@ export async function getSongUrl(song: Song, quality: string): Promise<SongUrlRe
     }
 
     // 2. 第二优先级：尝试 GDStudio API（支持多音乐源）
-    try {
-        console.log(`尝试使用 GDStudio API (${source}) 获取音频 URL...`);
-        const response = await fetchWithRetry(
-            `${gdstudioUrl}?types=url&source=${source}&id=${song.id}&br=${quality}`
-        );
-        const data: GDStudioUrlResponse = await response.json();
+    // NOTE: 检查 GDStudio API 是否可用
+    if (isGDStudioApiAvailable()) {
+        try {
+            console.log(`尝试使用 GDStudio API (${source}) 获取音频 URL...`);
+            const response = await fetchWithRetry(
+                `${gdstudioUrl}?types=url&source=${source}&id=${song.id}&br=${quality}`,
+                {},
+                1  // 减少重试次数
+            );
+            const data: GDStudioUrlResponse = await response.json();
 
-        if (data?.url) {
-            console.log(`GDStudio API 获取成功 (${data.br}K):`, data.url.substring(0, 50) + '...');
-            const result = { url: data.url, br: String(data.br || quality) };
-            if (!isProbablyPreview(result.url)) {
-                return result;
+            if (data?.url) {
+                markGDStudioApiAvailable();
+                console.log(`GDStudio API 获取成功 (${data.br}K):`, data.url.substring(0, 50) + '...');
+                const result = { url: data.url, br: String(data.br || quality) };
+                if (!isProbablyPreview(result.url)) {
+                    return result;
+                }
+                candidates.push(result);
             }
-            candidates.push(result);
+        } catch (e) {
+            console.warn('GDStudio API 请求失败:', e);
+            // 如果是 403 错误，标记 API 不可用
+            if (e instanceof MusicError && e.message.includes('403')) {
+                markGDStudioApiUnavailable();
+            }
         }
-    } catch (e) {
-        console.warn('GDStudio API 请求失败:', e);
     }
 
     // 3. 第三优先级：NEC 常规接口 (仅网易云)
