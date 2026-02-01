@@ -576,6 +576,7 @@ function calculateSongMatchScore(
 
 /**
  * 从单个源搜索歌曲（用于并行搜索）
+ * NOTE: 完整版优先 - 从低音质开始尝试，更容易获取完整版
  */
 async function searchSingleSource(
     source: string,
@@ -614,10 +615,15 @@ async function searchSingleSource(
             .filter(match => match.score > PREVIEW_DETECTION.SIMILARITY_THRESHOLD)
             .sort((a, b) => b.score - a.score);
 
+        // 完整版优先：从低音质开始尝试，更容易获取完整版
+        const qualityLevels = ['128', '192', '320'];
+
         for (const match of bestMatches.slice(0, 3)) {
-            const urlResult = await getSongUrlFromSource(match.song.id, source, quality);
-            if (urlResult && urlResult.url && !isProbablyPreview(urlResult.url, urlResult.size)) {
-                return { ...urlResult, source };
+            for (const q of qualityLevels) {
+                const urlResult = await getSongUrlFromSource(match.song.id, source, q);
+                if (urlResult && urlResult.url && !isProbablyPreview(urlResult.url, urlResult.size)) {
+                    return { ...urlResult, source };
+                }
             }
         }
     } catch (e) {

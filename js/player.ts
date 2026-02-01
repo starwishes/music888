@@ -245,29 +245,32 @@ export async function playSong(
     try {
         ui.showNotification('正在加载音乐...', 'info');
 
-        // 品质降级队列：按优先级尝试
         const qualitySelect = document.getElementById('qualitySelect') as HTMLSelectElement;
         const preferredQuality = qualitySelect ? qualitySelect.value : '128';
-        const qualityFallback = ['999', '740', '320', '192', '128'];
 
-        // 确保首选品质在队列首位
-        const qualityQueue = [preferredQuality, ...qualityFallback.filter(q => q !== preferredQuality)];
+        // NOTE: 完整版优先策略 - 先用低音质确保获取完整版，再尝试高音质
+        // 从低到高尝试，更容易获取完整版
+        const qualityQueue = ['128', '192', '320', '740', '999'];
 
         let urlData: { url: string; br: string } | null = null;
         let successQuality = '';
 
-        // 依次尝试各个品质
+        // 依次尝试各个品质（从低到高）
         for (const quality of qualityQueue) {
-            if (requestId !== currentPlayRequestId) return; // Check race condition
+            if (requestId !== currentPlayRequestId) return;
 
             try {
                 const result = await api.getSongUrl(song, quality);
-                if (requestId !== currentPlayRequestId) return; // Check again after await
+                if (requestId !== currentPlayRequestId) return;
 
                 if (result && result.url) {
                     urlData = result;
                     successQuality = quality;
-                    break;
+                    // 如果获取到完整版且达到用户期望音质，直接使用
+                    if (parseInt(quality) >= parseInt(preferredQuality)) {
+                        break;
+                    }
+                    // 否则继续尝试更高音质
                 }
             } catch (err) {
                 console.warn(`获取品质 ${quality} 失败:`, err);
