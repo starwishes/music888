@@ -29,14 +29,19 @@ function checkRateLimit(ip) {
 }
 
 const ALLOWED_HOSTS = [
+    // 音乐 API 源
     'music-api.gdstudio.xyz',
     'api.injahow.cn',
     'api.i-meto.com',
     'w7z.indevs.in',
     'netease-cloud-music-api-psi-three.vercel.app',
+    'netease-cloud-music-api-five-roan.vercel.app',
+    // QQ 音乐
     'y.qq.com',
+    // 网易云音乐
     'music.163.com',
     'interface.music.163.com',
+    // 网易云音乐 CDN (音频流)
     'music.126.net',
     'm7.music.126.net',
     'm8.music.126.net',
@@ -44,17 +49,23 @@ const ALLOWED_HOSTS = [
     'm801.music.126.net',
     'p1.music.126.net',
     'p2.music.126.net',
+    // QQ 音乐 CDN
     'dl.stream.qqmusic.qq.com',
     'ws.stream.qqmusic.qq.com',
     'isure.stream.qqmusic.qq.com',
+    // 酷狗音乐 CDN
     'trackercdn.kugou.com',
     'webfs.tx.kugou.com',
+    // 咪咕音乐 CDN
     'freetyst.nf.migu.cn',
+    // 酷我音乐 CDN
     'sycdn.kuwo.cn',
     'other.web.nf01.sycdn.kuwo.cn',
     'other.web.ra01.sycdn.kuwo.cn',
+    // JOOX CDN
     'joox.com',
     'api.joox.com',
+    // 喜马拉雅 CDN
     'ximalaya.com',
     'fdfs.xmcdn.com',
     'aod.cos.tx.xmcdn.com'
@@ -63,6 +74,7 @@ const ALLOWED_HOSTS = [
 const NETEASE_COOKIE_HOSTS = [
     'music.163.com',
     'netease-cloud-music-api-psi-three.vercel.app',
+    'netease-cloud-music-api-five-roan.vercel.app',
     'w7z.indevs.in',
 ];
 
@@ -134,6 +146,15 @@ export async function onRequest(context) {
             'Accept': 'application/json, text/plain, */*'
         });
 
+        // 针对 GDStudio API 的特殊处理
+        if (parsedTarget.hostname.includes('gdstudio.xyz')) {
+            headers.set('Accept-Language', 'zh-CN,zh;q=0.9,en;q=0.8');
+            headers.set('Cache-Control', 'no-cache');
+            headers.set('Sec-Fetch-Dest', 'empty');
+            headers.set('Sec-Fetch-Mode', 'cors');
+            headers.set('Sec-Fetch-Site', 'same-site');
+        }
+
         const vipCookie = env.NETEASE_VIP_COOKIE;
         const isNeteaseHost = NETEASE_COOKIE_HOSTS.some(host =>
             parsedTarget.hostname === host || parsedTarget.hostname.endsWith('.' + host)
@@ -142,7 +163,9 @@ export async function onRequest(context) {
         if (vipCookie && isNeteaseHost) {
             headers.set('Cookie', vipCookie);
             // 处理部分部署需要 query 传参的情况
-            if (parsedTarget.hostname.includes('w7z.indevs.in') || parsedTarget.hostname.includes('i-meto.com')) {
+            if (parsedTarget.hostname.includes('w7z.indevs.in') ||
+                parsedTarget.hostname.includes('i-meto.com') ||
+                parsedTarget.hostname.includes('vercel.app')) {
                 if (!parsedTarget.searchParams.has('cookie')) {
                     parsedTarget.searchParams.set('cookie', vipCookie);
                 }
@@ -158,9 +181,15 @@ export async function onRequest(context) {
 
         // 5. 转发响应
         const newHeaders = new Headers(response.headers);
-        newHeaders.set('Access-Control-Allow-Origin', '*'); // 简单起见，Cloudflare 端允许所有
+        newHeaders.set('Access-Control-Allow-Origin', '*'); // Cloudflare 端允许所有
         newHeaders.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
         newHeaders.set('Access-Control-Allow-Headers', 'Content-Type');
+
+        // 音频流处理适配
+        const contentType = response.headers.get('content-type') || '';
+        if (contentType.includes('audio') || contentType.includes('octet-stream')) {
+            newHeaders.set('Accept-Ranges', 'bytes');
+        }
 
         return new Response(response.body, {
             status: response.status,

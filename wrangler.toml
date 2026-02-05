@@ -1,6 +1,6 @@
 name = "music888"
 pages_build_output_dir = "dist"
-compatibility_date = "2024-01-01"
+compatibility_date = "2024-04-03"
 
 [vars]
 # 建议在 Cloudflare 控制台 Web 界面配置这些敏感变量
