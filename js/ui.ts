@@ -525,14 +525,27 @@ export function updateInlineLyrics(lyrics: LyricLine[], currentTime: number): vo
  * @param artists 歌手列表
  * @param containerId 容器元素 ID
  * @param onClick 点击歌手回调
+ * @param options 追加模式和加载更多选项
  */
-export function displayArtistGrid(artists: ArtistInfo[], containerId: string, onClick: (artist: ArtistInfo) => void): void {
+export function displayArtistGrid(
+    artists: ArtistInfo[],
+    containerId: string,
+    onClick: (artist: ArtistInfo) => void,
+    options?: { append?: boolean; hasMore?: boolean; onLoadMore?: () => void }
+): void {
     const container = getElement(`#${containerId}`);
     if (!container) return;
 
-    container.innerHTML = '';
+    const append = options?.append ?? false;
 
-    if (artists.length === 0) {
+    if (!append) {
+        container.innerHTML = '';
+    } else {
+        // 移除旧的"加载更多"按钮
+        container.querySelector('.load-more-btn')?.remove();
+    }
+
+    if (artists.length === 0 && !append) {
         container.innerHTML = `<div class="empty-state"><i class="fas fa-microphone-alt"></i><div>暂无歌手数据</div></div>`;
         return;
     }
@@ -556,6 +569,15 @@ export function displayArtistGrid(artists: ArtistInfo[], containerId: string, on
         fragment.appendChild(card);
     }
 
+    // 如果还有更多数据，追加"加载更多"按钮
+    if (options?.hasMore && options.onLoadMore) {
+        const btn = document.createElement('button');
+        btn.className = 'load-more-btn';
+        btn.innerHTML = '<i class="fas fa-plus-circle"></i> 加载更多';
+        btn.addEventListener('click', options.onLoadMore);
+        fragment.appendChild(btn);
+    }
+
     container.appendChild(fragment);
 }
 
@@ -564,14 +586,26 @@ export function displayArtistGrid(artists: ArtistInfo[], containerId: string, on
  * @param radios 电台列表
  * @param containerId 容器元素 ID
  * @param onClick 点击电台回调
+ * @param options 追加模式和加载更多选项
  */
-export function displayRadioList(radios: RadioStation[], containerId: string, onClick: (radio: RadioStation) => void): void {
+export function displayRadioList(
+    radios: RadioStation[],
+    containerId: string,
+    onClick: (radio: RadioStation) => void,
+    options?: { append?: boolean; hasMore?: boolean; onLoadMore?: () => void }
+): void {
     const container = getElement(`#${containerId}`);
     if (!container) return;
 
-    container.innerHTML = '';
+    const append = options?.append ?? false;
 
-    if (radios.length === 0) {
+    if (!append) {
+        container.innerHTML = '';
+    } else {
+        container.querySelector('.load-more-btn')?.remove();
+    }
+
+    if (radios.length === 0 && !append) {
         container.innerHTML = `<div class="empty-state"><i class="fas fa-podcast"></i><div>暂无电台数据</div></div>`;
         return;
     }
@@ -598,6 +632,15 @@ export function displayRadioList(radios: RadioStation[], containerId: string, on
 
         item.addEventListener('click', () => onClick(radio));
         fragment.appendChild(item);
+    }
+
+    // 如果还有更多数据，追加"加载更多"按钮
+    if (options?.hasMore && options.onLoadMore) {
+        const btn = document.createElement('button');
+        btn.className = 'load-more-btn';
+        btn.innerHTML = '<i class="fas fa-plus-circle"></i> 加载更多';
+        btn.addEventListener('click', options.onLoadMore);
+        fragment.appendChild(btn);
     }
 
     container.appendChild(fragment);

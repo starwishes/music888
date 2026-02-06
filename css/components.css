@@ -704,6 +704,33 @@
     border: 0;
 }
 
+/* === Load More Button === */
+.load-more-btn {
+    width: 100%;
+    padding: 12px;
+    margin-top: 10px;
+    background: rgba(255, 107, 107, 0.15);
+    border: 1px dashed rgba(255, 107, 107, 0.4);
+    border-radius: 10px;
+    color: var(--color-primary);
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.load-more-btn:hover {
+    background: rgba(255, 107, 107, 0.25);
+}
+
+/* artist-grid 内的按钮需要占满整行 */
+.artist-grid .load-more-btn {
+    grid-column: 1 / -1;
+}
+
 /* === Artist Grid === */
 .artist-grid {
     display: grid;

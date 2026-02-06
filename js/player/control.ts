@@ -68,6 +68,11 @@ export async function playSong(
             fadeIn(audioPlayer);
         }
 
+        // 移动端播放成功后自动切换到播放器页面
+        if (window.innerWidth <= 768 && typeof window.switchMobilePage === 'function') {
+            window.switchMobilePage(1);
+        }
+
         // 4. 加载辅助资源（异步）
         loadExtraResources(song);
 

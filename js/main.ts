@@ -13,6 +13,16 @@ import { initPerformanceMonitoring } from './perf';
 // --- 移动端页面切换功能（必须在模块顶层定义，供 HTML onclick 使用）---
 let currentMobilePage = 0;
 
+// NOTE: 歌手分页状态
+let artistOffset = 0;
+let artistHasMore = false;
+let artistCurrentArea = -1;
+let artistCurrentType = -1;
+
+// NOTE: 电台分页状态
+let radioOffset = 0;
+let radioHasMore = false;
+
 // NOTE: 触摸滑动状态
 let touchStartX = 0;
 let touchStartY = 0;
@@ -525,10 +535,16 @@ function switchMyTab(tabName: string): void {
 /**
  * 加载歌手列表
  */
-async function handleLoadArtists(area: number, type: number = -1): Promise<void> {
+async function handleLoadArtists(area: number, type: number = -1, append: boolean = false): Promise<void> {
     const artistGrid = getElement('#artistGrid');
-    if (artistGrid) {
-        artistGrid.innerHTML = `<div class="empty-state" style="grid-column: 1/-1;"><i class="fas fa-spinner fa-spin"></i><div>正在加载...</div></div>`;
+
+    if (!append) {
+        artistOffset = 0;
+        artistCurrentArea = area;
+        artistCurrentType = type;
+        if (artistGrid) {
+            artistGrid.innerHTML = `<div class="empty-state" style="grid-column: 1/-1;"><i class="fas fa-spinner fa-spin"></i><div>正在加载...</div></div>`;
+        }
     }
 
     // 确保歌手网格和筛选器可见，隐藏歌曲视图
@@ -539,11 +555,17 @@ async function handleLoadArtists(area: number, type: number = -1): Promise<void>
     if (artistSongsView) (artistSongsView as HTMLElement).style.display = 'none';
 
     try {
-        const artists = await api.getArtistList(area, type);
-        ui.displayArtistGrid(artists, 'artistGrid', handleArtistClick);
+        const result = await api.getArtistList(area, type, 60, artistOffset);
+        artistOffset += result.artists.length;
+        artistHasMore = result.more;
+        ui.displayArtistGrid(result.artists, 'artistGrid', handleArtistClick, {
+            append,
+            hasMore: artistHasMore,
+            onLoadMore: () => handleLoadArtists(artistCurrentArea, artistCurrentType, true)
+        });
     } catch (error) {
         logger.error('Load artists failed:', error);
-        if (artistGrid) {
+        if (artistGrid && !append) {
             artistGrid.innerHTML = `<div class="empty-state" style="grid-column: 1/-1;"><i class="fas fa-exclamation-triangle"></i><div>加载歌手失败</div></div>`;
         }
     }
@@ -589,10 +611,14 @@ async function handleArtistClick(artist: ArtistInfo): Promise<void> {
 /**
  * 加载热门电台
  */
-async function handleLoadRadio(): Promise<void> {
+async function handleLoadRadio(append: boolean = false): Promise<void> {
     const radioList = getElement('#radioList');
-    if (radioList) {
-        radioList.innerHTML = `<div class="empty-state"><i class="fas fa-spinner fa-spin"></i><div>正在加载...</div></div>`;
+
+    if (!append) {
+        radioOffset = 0;
+        if (radioList) {
+            radioList.innerHTML = `<div class="empty-state"><i class="fas fa-spinner fa-spin"></i><div>正在加载...</div></div>`;
+        }
     }
 
     // 确保电台列表视图可见
@@ -602,11 +628,17 @@ async function handleLoadRadio(): Promise<void> {
     if (radioProgramsView) (radioProgramsView as HTMLElement).style.display = 'none';
 
     try {
-        const radios = await api.getHotRadio();
-        ui.displayRadioList(radios, 'radioList', handleRadioClick);
+        const result = await api.getHotRadio(60, radioOffset);
+        radioOffset += result.radios.length;
+        radioHasMore = result.hasMore;
+        ui.displayRadioList(result.radios, 'radioList', handleRadioClick, {
+            append,
+            hasMore: radioHasMore,
+            onLoadMore: () => handleLoadRadio(true)
+        });
     } catch (error) {
         logger.error('Load radio failed:', error);
-        if (radioList) {
+        if (radioList && !append) {
             radioList.innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><div>加载电台失败</div></div>`;
         }
     }
@@ -636,8 +668,8 @@ async function handleRadioClick(radio: RadioStation): Promise<void> {
     ui.showLoading('radioProgramResults');
 
     try {
-        const programs = await api.getRadioPrograms(radio.id);
-        ui.displayRadioPrograms(programs, 'radioProgramResults', handleRadioProgramPlay);
+        const result = await api.getRadioPrograms(radio.id);
+        ui.displayRadioPrograms(result.programs, 'radioProgramResults', handleRadioProgramPlay);
     } catch (error) {
         logger.error('Load radio programs failed:', error);
         ui.showError('加载电台节目失败', 'radioProgramResults');

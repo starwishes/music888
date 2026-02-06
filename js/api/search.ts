@@ -160,10 +160,13 @@ export async function parsePlaylistAPI(playlistUrlOrId: string): Promise<Playlis
 /**
  * 获取歌手列表
  */
-export async function getArtistList(area = -1, type = -1, limit = 30): Promise<ArtistInfo[]> {
-    const res = await fetchWithRetry(`${getNecApiUrl()}/artist/list?type=${type}&area=${area}&initial=-1&limit=${limit}`);
+export async function getArtistList(area = -1, type = -1, limit = 60, offset = 0): Promise<{ artists: ArtistInfo[], more: boolean }> {
+    const res = await fetchWithRetry(`${getNecApiUrl()}/artist/list?type=${type}&area=${area}&initial=-1&limit=${limit}&offset=${offset}`);
     const data: ArtistListResponse = await res.json();
-    return data.code === 200 && data.artists ? data.artists : [];
+    return {
+        artists: data.code === 200 && data.artists ? data.artists : [],
+        more: data.more ?? false
+    };
 }
 
 /**
@@ -178,17 +181,21 @@ export async function getArtistTopSongs(id: number): Promise<Song[]> {
 /**
  * 获取热门电台
  */
-export async function getHotRadio(limit = 30): Promise<RadioStation[]> {
-    const res = await fetchWithRetry(`${getNecApiUrl()}/dj/hot?limit=${limit}`);
+export async function getHotRadio(limit = 60, offset = 0): Promise<{ radios: RadioStation[], hasMore: boolean }> {
+    const res = await fetchWithRetry(`${getNecApiUrl()}/dj/hot?limit=${limit}&offset=${offset}`);
     const data: RadioHotResponse = await res.json();
-    return data.code === 200 && data.djRadios ? data.djRadios : [];
+    const radios = data.code === 200 && data.djRadios ? data.djRadios : [];
+    return { radios, hasMore: radios.length >= limit };
 }
 
 /**
  * 获取电台节目列表
  */
-export async function getRadioPrograms(rid: number, limit = 30): Promise<RadioProgram[]> {
-    const res = await fetchWithRetry(`${getNecApiUrl()}/dj/program?rid=${rid}&limit=${limit}`);
+export async function getRadioPrograms(rid: number, limit = 50, offset = 0): Promise<{ programs: RadioProgram[], more: boolean }> {
+    const res = await fetchWithRetry(`${getNecApiUrl()}/dj/program?rid=${rid}&limit=${limit}&offset=${offset}`);
     const data: RadioProgramResponse = await res.json();
-    return data.code === 200 && data.programs ? data.programs : [];
+    return {
+        programs: data.code === 200 && data.programs ? data.programs : [],
+        more: data.more ?? false
+    };
 }
