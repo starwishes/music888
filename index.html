@@ -136,12 +136,53 @@
 
             <!-- 歌手标签 -->
             <div id="artistTab" class="tab-content">
-                <div class="filter-bar" id="artistFilter">
-                    <button class="filter-btn active" data-area="-1">全部</button>
-                    <button class="filter-btn" data-area="7">华语</button>
-                    <button class="filter-btn" data-area="96">欧美</button>
-                    <button class="filter-btn" data-area="8">日本</button>
-                    <button class="filter-btn" data-area="16">韩国</button>
+                <div class="filter-group" id="artistFilter">
+                    <div class="filter-bar" id="artistAreaFilter">
+                        <span class="filter-label">地区</span>
+                        <button class="filter-btn active" data-area="-1">全部</button>
+                        <button class="filter-btn" data-area="7">华语</button>
+                        <button class="filter-btn" data-area="96">欧美</button>
+                        <button class="filter-btn" data-area="8">日本</button>
+                        <button class="filter-btn" data-area="16">韩国</button>
+                    </div>
+                    <div class="filter-bar" id="artistTypeFilter">
+                        <span class="filter-label">分类</span>
+                        <button class="filter-btn active" data-type="-1">全部</button>
+                        <button class="filter-btn" data-type="1">男歌手</button>
+                        <button class="filter-btn" data-type="2">女歌手</button>
+                        <button class="filter-btn" data-type="3">乐队/组合</button>
+                    </div>
+                    <div class="filter-bar filter-bar-initial" id="artistInitialFilter">
+                        <span class="filter-label">首字母</span>
+                        <button class="filter-btn active" data-initial="-1">热门</button>
+                        <button class="filter-btn" data-initial="a">A</button>
+                        <button class="filter-btn" data-initial="b">B</button>
+                        <button class="filter-btn" data-initial="c">C</button>
+                        <button class="filter-btn" data-initial="d">D</button>
+                        <button class="filter-btn" data-initial="e">E</button>
+                        <button class="filter-btn" data-initial="f">F</button>
+                        <button class="filter-btn" data-initial="g">G</button>
+                        <button class="filter-btn" data-initial="h">H</button>
+                        <button class="filter-btn" data-initial="i">I</button>
+                        <button class="filter-btn" data-initial="j">J</button>
+                        <button class="filter-btn" data-initial="k">K</button>
+                        <button class="filter-btn" data-initial="l">L</button>
+                        <button class="filter-btn" data-initial="m">M</button>
+                        <button class="filter-btn" data-initial="n">N</button>
+                        <button class="filter-btn" data-initial="o">O</button>
+                        <button class="filter-btn" data-initial="p">P</button>
+                        <button class="filter-btn" data-initial="q">Q</button>
+                        <button class="filter-btn" data-initial="r">R</button>
+                        <button class="filter-btn" data-initial="s">S</button>
+                        <button class="filter-btn" data-initial="t">T</button>
+                        <button class="filter-btn" data-initial="u">U</button>
+                        <button class="filter-btn" data-initial="v">V</button>
+                        <button class="filter-btn" data-initial="w">W</button>
+                        <button class="filter-btn" data-initial="x">X</button>
+                        <button class="filter-btn" data-initial="y">Y</button>
+                        <button class="filter-btn" data-initial="z">Z</button>
+                        <button class="filter-btn" data-initial="0">#</button>
+                    </div>
                 </div>
                 <div id="artistGrid" class="artist-grid"></div>
                 <div id="artistSongsView" style="display:none;">
@@ -154,8 +195,8 @@
             <!-- 电台标签 -->
             <div id="radioTab" class="tab-content">
                 <div id="radioListView">
-                    <div class="section-header">
-                        <h3><i class="fas fa-podcast"></i> 热门电台</h3>
+                    <div class="filter-bar" id="radioFilter">
+                        <button class="filter-btn active" data-cateid="0">热门</button>
                     </div>
                     <div id="radioList" class="radio-list"></div>
                 </div>

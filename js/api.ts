@@ -46,7 +46,9 @@ export {
     getArtistList,
     getArtistTopSongs,
     getHotRadio,
-    getRadioPrograms
+    getRadioPrograms,
+    getRadioCateList,
+    getRadioByCategory
 } from './api/search';
 
 // 导出工具函数 (如果需要的话)

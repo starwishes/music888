@@ -20,7 +20,10 @@ import {
     RadioStation,
     RadioHotResponse,
     RadioProgram,
-    RadioProgramResponse
+    RadioProgramResponse,
+    RadioCategory,
+    RadioCateListResponse,
+    RadioRecommendResponse
 } from '../types';
 
 import { fetchWithRetry } from './client';
@@ -160,8 +163,8 @@ export async function parsePlaylistAPI(playlistUrlOrId: string): Promise<Playlis
 /**
  * 获取歌手列表
  */
-export async function getArtistList(area = -1, type = -1, limit = 60, offset = 0): Promise<{ artists: ArtistInfo[], more: boolean }> {
-    const res = await fetchWithRetry(`${getNecApiUrl()}/artist/list?type=${type}&area=${area}&initial=-1&limit=${limit}&offset=${offset}`);
+export async function getArtistList(area = -1, type = -1, initial: string | number = -1, limit = 60, offset = 0): Promise<{ artists: ArtistInfo[], more: boolean }> {
+    const res = await fetchWithRetry(`${getNecApiUrl()}/artist/list?type=${type}&area=${area}&initial=${initial}&limit=${limit}&offset=${offset}`);
     const data: ArtistListResponse = await res.json();
     return {
         artists: data.code === 200 && data.artists ? data.artists : [],
@@ -198,4 +201,23 @@ export async function getRadioPrograms(rid: number, limit = 50, offset = 0): Pro
         programs: data.code === 200 && data.programs ? data.programs : [],
         more: data.more ?? false
     };
+}
+
+/**
+ * 获取电台分类列表
+ */
+export async function getRadioCateList(): Promise<RadioCategory[]> {
+    const res = await fetchWithRetry(`${getNecApiUrl()}/dj/catelist`);
+    const data: RadioCateListResponse = await res.json();
+    return data.code === 200 && data.categories ? data.categories : [];
+}
+
+/**
+ * 按分类获取电台
+ */
+export async function getRadioByCategory(cateId: number, limit = 60, offset = 0): Promise<{ radios: RadioStation[], hasMore: boolean }> {
+    const res = await fetchWithRetry(`${getNecApiUrl()}/dj/recommend/type?type=${cateId}&limit=${limit}&offset=${offset}`);
+    const data: RadioRecommendResponse = await res.json();
+    const radios = data.code === 200 && data.djRadios ? data.djRadios : [];
+    return { radios, hasMore: radios.length >= limit };
 }

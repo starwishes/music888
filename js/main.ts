@@ -6,7 +6,7 @@ import * as api from './api';
 import * as ui from './ui';
 import * as player from './player';
 import { getElement } from './utils';
-import { MusicError, ArtistInfo, RadioStation, RadioProgram } from './types';
+import { MusicError, ArtistInfo, RadioStation, RadioProgram, RadioCategory } from './types';
 import { logger } from './config';
 import { initPerformanceMonitoring } from './perf';
 
@@ -18,10 +18,13 @@ let artistOffset = 0;
 let artistHasMore = false;
 let artistCurrentArea = -1;
 let artistCurrentType = -1;
+let artistCurrentInitial: string | number = -1;
 
 // NOTE: 电台分页状态
 let radioOffset = 0;
 let radioHasMore = false;
+let radioCurrentCateId = 0; // 0 = 热门
+let radioCategoriesLoaded = false;
 
 // NOTE: 触摸滑动状态
 let touchStartX = 0;
@@ -256,8 +259,11 @@ function bindEventListeners(): void {
                     }
                 }
 
-                // 切换到"电台"标签时，首次加载热门电台
+                // 切换到"电台"标签时，首次加载热门电台并加载分类
                 if (tabName === 'radio') {
+                    if (!radioCategoriesLoaded) {
+                        loadRadioCategories();
+                    }
                     const radioList = document.getElementById('radioList');
                     if (radioList && radioList.children.length === 0) {
                         handleLoadRadio();
@@ -308,12 +314,32 @@ function bindEventListeners(): void {
     }
 
     // 歌手地区筛选按钮
-    document.querySelectorAll('#artistFilter .filter-btn').forEach(button => {
+    document.querySelectorAll('#artistAreaFilter .filter-btn').forEach(button => {
         button.addEventListener('click', () => {
-            document.querySelectorAll('#artistFilter .filter-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('#artistAreaFilter .filter-btn').forEach(btn => btn.classList.remove('active'));
             button.classList.add('active');
             const area = parseInt((button as HTMLElement).dataset.area || '-1', 10);
-            handleLoadArtists(area);
+            handleLoadArtists(area, artistCurrentType, artistCurrentInitial);
+        });
+    });
+
+    // 歌手分类筛选按钮
+    document.querySelectorAll('#artistTypeFilter .filter-btn').forEach(button => {
+        button.addEventListener('click', () => {
+            document.querySelectorAll('#artistTypeFilter .filter-btn').forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+            const type = parseInt((button as HTMLElement).dataset.type || '-1', 10);
+            handleLoadArtists(artistCurrentArea, type, artistCurrentInitial);
+        });
+    });
+
+    // 歌手首字母筛选按钮
+    document.querySelectorAll('#artistInitialFilter .filter-btn').forEach(button => {
+        button.addEventListener('click', () => {
+            document.querySelectorAll('#artistInitialFilter .filter-btn').forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+            const initial = (button as HTMLElement).dataset.initial || '-1';
+            handleLoadArtists(artistCurrentArea, artistCurrentType, initial === '-1' ? -1 : initial);
         });
     });
 
@@ -535,13 +561,14 @@ function switchMyTab(tabName: string): void {
 /**
  * 加载歌手列表
  */
-async function handleLoadArtists(area: number, type: number = -1, append: boolean = false): Promise<void> {
+async function handleLoadArtists(area: number, type: number = -1, initial: string | number = -1, append: boolean = false): Promise<void> {
     const artistGrid = getElement('#artistGrid');
 
     if (!append) {
         artistOffset = 0;
         artistCurrentArea = area;
         artistCurrentType = type;
+        artistCurrentInitial = initial;
         if (artistGrid) {
             artistGrid.innerHTML = `<div class="empty-state" style="grid-column: 1/-1;"><i class="fas fa-spinner fa-spin"></i><div>正在加载...</div></div>`;
         }
@@ -555,13 +582,13 @@ async function handleLoadArtists(area: number, type: number = -1, append: boolea
     if (artistSongsView) (artistSongsView as HTMLElement).style.display = 'none';
 
     try {
-        const result = await api.getArtistList(area, type, 60, artistOffset);
+        const result = await api.getArtistList(area, type, initial, 60, artistOffset);
         artistOffset += result.artists.length;
         artistHasMore = result.more;
         ui.displayArtistGrid(result.artists, 'artistGrid', handleArtistClick, {
             append,
             hasMore: artistHasMore,
-            onLoadMore: () => handleLoadArtists(artistCurrentArea, artistCurrentType, true)
+            onLoadMore: () => handleLoadArtists(artistCurrentArea, artistCurrentType, artistCurrentInitial, true)
         });
     } catch (error) {
         logger.error('Load artists failed:', error);
@@ -609,7 +636,43 @@ async function handleArtistClick(artist: ArtistInfo): Promise<void> {
 }
 
 /**
- * 加载热门电台
+ * 加载电台分类列表
+ */
+async function loadRadioCategories(): Promise<void> {
+    try {
+        const categories = await api.getRadioCateList();
+        radioCategoriesLoaded = true;
+        const radioFilter = getElement('#radioFilter');
+        if (radioFilter && categories.length > 0) {
+            // 保留"热门"按钮，追加分类按钮
+            const fragment = document.createDocumentFragment();
+            categories.forEach(cat => {
+                const btn = document.createElement('button');
+                btn.className = 'filter-btn';
+                btn.dataset.cateid = String(cat.id);
+                btn.textContent = cat.name;
+                fragment.appendChild(btn);
+            });
+            radioFilter.appendChild(fragment);
+
+            // 绑定电台分类筛选事件（包括已有的"热门"按钮）
+            radioFilter.querySelectorAll('.filter-btn').forEach(button => {
+                button.addEventListener('click', () => {
+                    radioFilter.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    const cateId = parseInt((button as HTMLElement).dataset.cateid || '0', 10);
+                    radioCurrentCateId = cateId;
+                    handleLoadRadio();
+                });
+            });
+        }
+    } catch (error) {
+        logger.error('Load radio categories failed:', error);
+    }
+}
+
+/**
+ * 加载电台列表（热门或按分类）
  */
 async function handleLoadRadio(append: boolean = false): Promise<void> {
     const radioList = getElement('#radioList');
@@ -628,7 +691,12 @@ async function handleLoadRadio(append: boolean = false): Promise<void> {
     if (radioProgramsView) (radioProgramsView as HTMLElement).style.display = 'none';
 
     try {
-        const result = await api.getHotRadio(60, radioOffset);
+        let result: { radios: RadioStation[], hasMore: boolean };
+        if (radioCurrentCateId === 0) {
+            result = await api.getHotRadio(60, radioOffset);
+        } else {
+            result = await api.getRadioByCategory(radioCurrentCateId, 60, radioOffset);
+        }
         radioOffset += result.radios.length;
         radioHasMore = result.hasMore;
         ui.displayRadioList(result.radios, 'radioList', handleRadioClick, {

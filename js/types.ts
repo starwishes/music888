@@ -562,3 +562,27 @@ export interface RadioProgramResponse {
     programs?: RadioProgram[];
     more?: boolean;
 }
+
+/**
+ * 电台分类
+ */
+export interface RadioCategory {
+    id: number;
+    name: string;
+}
+
+/**
+ * 电台分类列表 API 响应
+ */
+export interface RadioCateListResponse {
+    code: number;
+    categories?: RadioCategory[];
+}
+
+/**
+ * 电台推荐 API 响应（按分类）
+ */
+export interface RadioRecommendResponse {
+    code: number;
+    djRadios?: RadioStation[];
+}
