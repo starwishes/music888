@@ -41,12 +41,11 @@
 
     .lyrics-section {
         display: none;
-        /* Hide lyrics on smaller screens initially */
     }
 
+    /* 平板端：右栏"我的"面板作为第二列 */
     .my-panel-section {
-        display: none;
-        /* Hide my-panel on smaller screens initially */
+        grid-row: 1 / -1;
     }
 
     .content-section {
@@ -162,7 +161,6 @@
     }
 
     .search-wrapper {
-        flex-wrap: wrap;
         border-radius: 20px;
     }
 
@@ -183,26 +181,30 @@
         padding-bottom: 60px;
     }
 
-    .song-name {
-        font-size: 15px;
-        margin-bottom: 3px;
-    }
-
-    .song-artist {
-        font-size: 12px;
-        opacity: 0.7;
-    }
-
-    /* Content improvements */
+    /* === 左栏标签页 - 4个标签紧凑排列 === */
     .tabs {
-        padding: 10px 0;
-        gap: 5px;
+        padding: 8px 0;
+        gap: 0;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        flex-wrap: nowrap;
+    }
+
+    .tabs::-webkit-scrollbar {
+        display: none;
     }
 
     .tab-btn {
-        padding: 10px 14px;
-        font-size: 14px;
-        border-radius: 10px;
+        padding: 8px 12px;
+        font-size: 13px;
+        border-radius: 8px;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+    .tab-btn i {
+        margin-right: 4px;
     }
 
     .section-header {
@@ -218,22 +220,286 @@
         font-size: 12px !important;
     }
 
-    /* 播放器封面限制 */
+    /* === 歌曲列表 === */
+    .song-name {
+        font-size: 15px;
+        margin-bottom: 3px;
+    }
+
+    .song-artist {
+        font-size: 12px;
+        opacity: 0.7;
+    }
+
+    .song-item {
+        padding: 12px 10px;
+    }
+
+    .song-index {
+        width: 32px;
+        height: 32px;
+        font-size: 12px;
+        margin-right: 12px;
+    }
+
+    .song-info {
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+    }
+
+    .song-name,
+    .song-artist {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* 歌曲操作按钮在移动端始终可见 */
+    .song-actions {
+        opacity: 1;
+    }
+
+    /* === 歌手标签移动端 === */
+    .artist-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        padding: 0 5px;
+    }
+
+    .artist-card {
+        padding: 12px 8px;
+    }
+
+    .artist-avatar {
+        width: 56px;
+        height: 56px;
+    }
+
+    .artist-name {
+        font-size: 12px;
+    }
+
+    .filter-bar {
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        padding-bottom: 5px;
+        gap: 6px;
+    }
+
+    .filter-bar::-webkit-scrollbar {
+        display: none;
+    }
+
+    .filter-btn {
+        padding: 5px 12px;
+        font-size: 12px;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+    .back-btn {
+        padding: 10px 0;
+        font-size: 14px;
+        min-height: 44px;
+    }
+
+    .artist-songs-header {
+        padding: 8px;
+        gap: 10px;
+    }
+
+    .artist-songs-header img {
+        width: 40px;
+        height: 40px;
+    }
+
+    .artist-songs-header .artist-header-name {
+        font-size: 16px;
+    }
+
+    /* === 电台标签移动端 === */
+    .radio-item {
+        padding: 10px;
+        gap: 10px;
+    }
+
+    .radio-cover {
+        width: 44px;
+        height: 44px;
+        border-radius: 6px;
+    }
+
+    .radio-name {
+        font-size: 14px;
+    }
+
+    .radio-meta {
+        font-size: 11px;
+    }
+
+    .radio-programs-header {
+        padding: 8px;
+        gap: 10px;
+    }
+
+    .radio-programs-header img {
+        width: 40px;
+        height: 40px;
+    }
+
+    .radio-programs-header .radio-header-name {
+        font-size: 16px;
+    }
+
+    /* === 播放器移动端 === */
     .current-cover {
         max-width: 180px;
     }
 
-    /* Lyrics improvements */
-    .lyrics-section,
+    .inline-lyrics {
+        padding: 6px 10px;
+        min-height: 24px;
+    }
+
+    .inline-lyric-text {
+        font-size: 12px;
+    }
+
+    .player-controls {
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+
+    .control-btn.small {
+        width: 44px;
+        height: 44px;
+        font-size: 18px;
+    }
+
+    .control-btn.play-btn {
+        width: 64px;
+        height: 64px;
+        font-size: 26px;
+    }
+
+    .progress-bar {
+        height: 8px;
+        margin: 0 5px;
+    }
+
+    .volume-slider {
+        height: 6px;
+    }
+
+    .volume-slider::-webkit-slider-thumb {
+        width: 16px;
+        height: 16px;
+    }
+
+    .quality-download-container {
+        flex-wrap: wrap;
+        gap: 8px;
+        width: 100%;
+    }
+
+    .quality-select,
+    .download-btn {
+        padding: 10px 16px;
+        font-size: 13px;
+    }
+
+    /* === 右栏"我的"面板移动端 === */
     .my-panel-section {
+        padding: 15px !important;
+        display: flex !important;
+        flex-direction: column;
+    }
+
+    .my-panel-section .section-title {
+        font-size: 18px;
+        margin-bottom: 12px;
+        padding-left: 5px;
+    }
+
+    .my-tabs {
+        margin-bottom: 12px;
+        gap: 0;
+    }
+
+    .my-tab-btn {
+        padding: 8px 12px;
+        font-size: 13px;
+        flex: 1;
+        justify-content: center;
+    }
+
+    .my-tab-btn i {
+        font-size: 12px;
+    }
+
+    .my-tab-content {
+        min-height: 0;
+    }
+
+    /* 右栏歌单输入框移动端 */
+    .my-panel-section .playlist-input-container {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .my-panel-section .playlist-input {
+        width: 100%;
+        font-size: 14px;
+        padding: 10px 15px;
+    }
+
+    .my-panel-section .playlist-btn {
+        width: 100%;
+        padding: 10px 15px;
+        font-size: 14px;
+        justify-content: center;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .my-panel-section .saved-playlists-container {
+        padding: 10px;
+    }
+
+    .my-panel-section .saved-playlists-header h4 {
+        font-size: 14px;
+    }
+
+    .my-section-header {
+        padding: 0 5px;
+    }
+
+    .my-section-header h3 {
+        font-size: 15px;
+    }
+
+    .count-badge {
+        font-size: 11px;
+        padding: 2px 8px;
+    }
+
+    .clear-history-btn {
+        font-size: 11px;
+        padding: 5px 10px;
+    }
+
+    /* === 歌词区域（保留用于可能的桌面端显示） === */
+    .lyrics-section {
         padding: 25px 20px !important;
         display: flex;
         flex-direction: column;
     }
 
-    /* Re-enable lyrics flex display for mobile page 3 */
-    .lyrics-section .section-title,
-    .my-panel-section .section-title {
+    .lyrics-section .section-title {
         font-size: 18px;
         margin-bottom: 20px;
         padding-left: 5px;
@@ -241,6 +507,7 @@
 
     .lyrics-container {
         padding: 0 5px;
+        -webkit-overflow-scrolling: touch;
     }
 
     .lyric-line {
@@ -258,9 +525,7 @@
         border-left: 3px solid var(--color-primary);
     }
 
-    /* Search improvements */
-    /* NOTE: 搜索框样式已在上方统一处理，这里移除重复样式 */
-
+    /* === 排行榜 === */
     .ranking-header {
         flex-direction: column;
         align-items: flex-start;
@@ -270,6 +535,57 @@
         width: 100%;
         overflow-x: auto;
         padding-bottom: 5px;
+    }
+
+    /* === 页面指示器 === */
+    .page-indicator {
+        width: 10px;
+        height: 10px;
+        cursor: pointer;
+    }
+
+    .page-indicator:active {
+        transform: scale(0.9);
+    }
+
+    /* === 通知移动端居中 === */
+    .notification {
+        top: auto;
+        bottom: 80px;
+        right: 50%;
+        transform: translateX(50%) translateY(100%);
+        max-width: calc(100vw - 40px);
+        text-align: center;
+    }
+
+    .notification-show {
+        transform: translateX(50%) translateY(0);
+    }
+
+    .notification-hide {
+        transform: translateX(50%) translateY(100%);
+    }
+
+    /* === 搜索结果列表优化 === */
+    .search-results {
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* === 空状态 / 加载状态 === */
+    .empty-state {
+        padding: 40px 20px;
+    }
+
+    .empty-state i {
+        font-size: 40px;
+    }
+
+    .loading {
+        padding: 40px 20px;
+    }
+
+    .loading i {
+        font-size: 32px;
     }
 }
 
@@ -283,16 +599,33 @@
     .player-section,
     .lyrics-section,
     .my-panel-section {
-        padding: 15px 10px;
+        padding: 12px 8px;
+        padding-bottom: 70px;
     }
 
+    /* 标签页文字更紧凑 */
+    .tab-btn {
+        padding: 8px 10px;
+        font-size: 12px;
+    }
+
+    /* 歌手网格2列 */
     .artist-grid {
         grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
     }
 
-    .filter-bar {
-        overflow-x: auto;
-        flex-wrap: nowrap;
+    .artist-card {
+        padding: 10px 6px;
+    }
+
+    .artist-avatar {
+        width: 48px;
+        height: 48px;
+    }
+
+    .artist-name {
+        font-size: 11px;
     }
 
     .current-cover {
@@ -321,7 +654,7 @@
     }
 
     .song-item {
-        padding: 10px 12px;
+        padding: 10px 8px;
     }
 
     .song-name {
@@ -332,19 +665,14 @@
         font-size: 11px;
     }
 
-    .tab-btn {
-        padding: 10px 15px;
-        font-size: 14px;
-    }
-
     .playlist-input {
-        padding: 10px 15px;
-        font-size: 14px;
+        padding: 10px 12px;
+        font-size: 13px;
     }
 
     .playlist-btn {
-        padding: 10px 15px;
-        font-size: 14px;
+        padding: 10px 12px;
+        font-size: 13px;
     }
 
     .volume-container {
@@ -361,150 +689,30 @@
         height: 28px;
         font-size: 11px;
     }
-}
 
-/* === Mobile-specific Enhancements === */
-@media (max-width: 768px) {
-    /* 通知在移动端居中显示 */
-    .notification {
-        top: auto;
-        bottom: 80px;
-        right: 50%;
-        transform: translateX(50%) translateY(100%);
-        max-width: calc(100vw - 40px);
-        text-align: center;
+    /* 右栏标签更紧凑 */
+    .my-tab-btn {
+        padding: 7px 8px;
+        font-size: 12px;
+        gap: 4px;
     }
 
-    .notification-show {
-        transform: translateX(50%) translateY(0);
+    .my-tab-btn i {
+        font-size: 11px;
     }
 
-    .notification-hide {
-        transform: translateX(50%) translateY(100%);
+    /* 电台封面更小 */
+    .radio-cover {
+        width: 40px;
+        height: 40px;
     }
 
-    /* 歌曲操作按钮在移动端始终可见 */
-    .song-actions {
-        opacity: 1;
-    }
-
-    /* 播放器控件优化 */
-    .player-controls {
-        gap: 15px;
-        margin-bottom: 20px;
-    }
-
-    .control-btn.small {
-        width: 44px;
-        height: 44px;
-        font-size: 18px;
-    }
-
-    .control-btn.play-btn {
-        width: 64px;
-        height: 64px;
-        font-size: 26px;
-    }
-
-    /* 进度条更容易点击 */
-    .progress-bar {
-        height: 8px;
-        margin: 0 5px;
-    }
-
-    /* 音量控制优化 */
-    .volume-slider {
-        height: 6px;
-    }
-
-    .volume-slider::-webkit-slider-thumb {
-        width: 16px;
-        height: 16px;
-    }
-
-    /* 品质选择和下载按钮 */
-    .quality-download-container {
-        flex-wrap: wrap;
-        gap: 8px;
-        width: 100%;
-    }
-
-    .quality-select,
-    .download-btn {
-        padding: 10px 16px;
+    .radio-name {
         font-size: 13px;
     }
 
-    /* 页面指示器增强 */
-    .page-indicator {
-        width: 10px;
-        height: 10px;
-        cursor: pointer;
-    }
-
-    .page-indicator:active {
-        transform: scale(0.9);
-    }
-
-    /* 歌曲索引在移动端更小 */
-    .song-index {
-        width: 32px;
-        height: 32px;
-        font-size: 12px;
-        margin-right: 12px;
-    }
-
-    /* 歌曲信息区域优化 */
-    .song-info {
-        flex: 1;
-        min-width: 0;
-        overflow: hidden;
-    }
-
-    .song-name,
-    .song-artist {
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    /* 标签页滚动优化 */
-    .tabs {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: none;
-    }
-
-    .tabs::-webkit-scrollbar {
-        display: none;
-    }
-
-    /* 搜索结果列表优化 */
-    .search-results {
-        -webkit-overflow-scrolling: touch;
-    }
-
-    /* 歌词容器优化 */
-    .lyrics-container {
-        -webkit-overflow-scrolling: touch;
-    }
-
-    /* 空状态优化 */
-    .empty-state {
-        padding: 40px 20px;
-    }
-
-    .empty-state i {
-        font-size: 40px;
-    }
-
-    /* 加载状态优化 */
-    .loading {
-        padding: 40px 20px;
-    }
-
-    .loading i {
-        font-size: 32px;
+    .radio-meta {
+        font-size: 10px;
     }
 }
 
@@ -526,10 +734,27 @@
         left: -100%;
     }
 
+    .artist-card:hover {
+        transform: none;
+        background: transparent;
+    }
+
+    .radio-item:hover {
+        transform: none;
+    }
+
     /* 触摸设备上的点击反馈 */
     .song-item:active {
         background: rgba(255, 255, 255, 0.1);
         transform: scale(0.98);
+    }
+
+    .artist-card:active {
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    .radio-item:active {
+        background: rgba(255, 255, 255, 0.1);
     }
 
     .control-btn:active {
@@ -538,6 +763,18 @@
 
     .tab-btn:active {
         background: rgba(255, 255, 255, 0.1);
+    }
+
+    .my-tab-btn:active {
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    .filter-btn:active {
+        background: rgba(255, 255, 255, 0.15);
+    }
+
+    .back-btn:active {
+        opacity: 0.6;
     }
 }
 
@@ -599,5 +836,10 @@
 
     .player-controls {
         margin-bottom: 15px;
+    }
+
+    /* 横屏歌手网格4列 */
+    .artist-grid {
+        grid-template-columns: repeat(4, 1fr);
     }
 }
