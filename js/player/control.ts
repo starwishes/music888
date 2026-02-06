@@ -193,6 +193,9 @@ export function downloadSongByData(song: Song | null): void {
         } else {
             ui.showNotification('获取下载链接失败', 'error');
         }
+    }).catch(e => {
+        logger.error('下载歌曲失败:', e);
+        ui.showNotification('下载失败，请重试', 'error');
     });
 }
 
@@ -214,5 +217,8 @@ export function downloadLyricByData(song: Song | null): void {
         } else {
             ui.showNotification('无可用歌词', 'warning');
         }
+    }).catch(e => {
+        logger.error('下载歌词失败:', e);
+        ui.showNotification('歌词下载失败，请重试', 'error');
     });
 }

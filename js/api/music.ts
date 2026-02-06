@@ -150,7 +150,7 @@ async function searchSingleSource(source: string, songName: string, artistName: 
 /**
  * 跨源搜索逻辑
  */
-export async function searchSongFromOtherSources(songName: string, artistName: string, excludeSource: string, _quality: string): Promise<SongUrlResult | null> {
+export async function searchSongFromOtherSources(songName: string, artistName: string, excludeSource: string): Promise<SongUrlResult | null> {
     const sources = getSortedFallbackSources(excludeSource);
     const promises = sources.map(source =>
         searchSingleSource(source, songName, artistName)
@@ -208,7 +208,7 @@ export async function tryGetFullVersionFromOtherSources(song: Song, quality: str
     crossSourceSearchInProgress.add(key);
     try {
         const artist = Array.isArray(song.artist) ? song.artist[0] : song.artist;
-        return await searchSongFromOtherSources(song.name, artist, song.source || 'netease', quality);
+        return await searchSongFromOtherSources(song.name, artist, song.source || 'netease');
     } finally {
         crossSourceSearchInProgress.delete(key);
     }
@@ -232,7 +232,7 @@ export async function getSongUrl(song: Song, quality: string): Promise<SongUrlRe
                 const res = { url: matchData.data[0].url, br: String(matchData.data[0].br), size: matchData.data[0].size };
                 if (!isProbablyPreview(res.url, res.size)) return res;
                 candidates.push(res);
-                if (PREVIEW_DETECTION.PROACTIVE_CHECK) crossSourcePromise = searchSongFromOtherSources(song.name, artist, source, quality);
+                if (PREVIEW_DETECTION.PROACTIVE_CHECK) crossSourcePromise = searchSongFromOtherSources(song.name, artist, source);
             }
         } catch (e) { /* ignore */ }
     }
@@ -245,7 +245,7 @@ export async function getSongUrl(song: Song, quality: string): Promise<SongUrlRe
                 if (!isProbablyPreview(res.url, res.size, song.duration)) return res;
                 candidates.push(res);
                 if (!crossSourcePromise && PREVIEW_DETECTION.PROACTIVE_CHECK) {
-                    crossSourcePromise = searchSongFromOtherSources(song.name, artist, source, quality);
+                    crossSourcePromise = searchSongFromOtherSources(song.name, artist, source);
                 }
             }
         } catch (e) { /* ignore */ }

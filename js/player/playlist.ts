@@ -4,7 +4,7 @@
  */
 
 import { Song, PlaylistData } from '../types';
-import { logger } from '../config';
+import { APP_CONFIG, logger } from '../config';
 
 /** 歌单存储容器 */
 const playlistStorage = new Map<string, PlaylistData>();
@@ -12,8 +12,6 @@ const playlistStorage = new Map<string, PlaylistData>();
 let playlistCounter: number = 0;
 /** 播放历史列表 */
 let playHistory: Song[] = [];
-/** 最大历史纪录数量 */
-const MAX_HISTORY_SIZE = 100;
 
 export function loadSavedPlaylists(): void {
     try {
@@ -128,8 +126,8 @@ export function addToHistory(song: Song): void {
     // 添加到开头
     playHistory.unshift({ ...song });
     // 限制数量
-    if (playHistory.length > MAX_HISTORY_SIZE) {
-        playHistory = playHistory.slice(0, MAX_HISTORY_SIZE);
+    if (playHistory.length > APP_CONFIG.MAX_HISTORY_SIZE) {
+        playHistory = playHistory.slice(0, APP_CONFIG.MAX_HISTORY_SIZE);
     }
     savePlayHistoryToStorage();
 }

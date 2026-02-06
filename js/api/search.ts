@@ -112,6 +112,11 @@ export async function parsePlaylistAPI(playlistUrlOrId: string): Promise<Playlis
     const idMatch = id.match(/id=(\d+)/) || id.match(/playlist\/(\d+)/);
     if (idMatch) id = idMatch[1];
 
+    // 验证歌单 ID 必须为纯数字，防止参数注入
+    if (!/^\d+$/.test(id)) {
+        throw new Error('无效的歌单ID，请输入纯数字ID或包含ID的链接');
+    }
+
     if (currentAPI.type === 'nec') {
         const res = await fetchWithRetry(`${getNecApiUrl()}/playlist/detail?id=${id}`);
         const data: NeteasePlaylistDetailResponse = await res.json();

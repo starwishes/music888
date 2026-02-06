@@ -5,6 +5,7 @@
 
 import * as ui from '../ui';
 import * as api from '../api';
+import { Song } from '../types';
 import { logger, PREVIEW_DETECTION } from '../config';
 import {
     audioPlayer,
@@ -21,6 +22,8 @@ import { fadeIn, fadeOut } from './effects';
 /** 正在进行的跨源搜索状态 */
 let isSeekingFullVersion = false;
 let fullVersionSearchCount = 0;
+/** 切换完整版时的最大回退播放位置（秒） */
+const MAX_SEEK_ON_SWITCH = 10;
 
 /**
  * 绑定音频事件
@@ -55,6 +58,11 @@ export function bindAudioEvents(): void {
     });
 
     audioPlayer.addEventListener('loadedmetadata', handleMetadataLoaded);
+
+    // 新歌曲开始加载时重置试听检测计数
+    audioPlayer.addEventListener('loadstart', () => {
+        fullVersionSearchCount = 0;
+    });
 
     audioPlayer.addEventListener('error', () => {
         logger.error('Audio Error:', audioPlayer.error?.message);
@@ -99,7 +107,7 @@ async function handleMetadataLoaded(): Promise<void> {
                 audioPlayer.load();
 
                 audioPlayer.addEventListener('canplay', () => {
-                    audioPlayer.currentTime = Math.min(currentTime, 10);
+                    audioPlayer.currentTime = Math.min(currentTime, MAX_SEEK_ON_SWITCH);
                     if (wasPlaying) {
                         audioPlayer.play().then(() => fadeIn(audioPlayer));
                     }
@@ -116,7 +124,7 @@ async function handleMetadataLoaded(): Promise<void> {
 /**
  * 更新 Media Session (系统媒体控制)
  */
-export function updateMediaSession(song: any, coverUrl: string): void {
+export function updateMediaSession(song: Song, coverUrl: string): void {
     if ('mediaSession' in navigator) {
         navigator.mediaSession.metadata = new MediaMetadata({
             title: song.name,

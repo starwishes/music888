@@ -3,7 +3,10 @@
  * 适配 Cloudflare Workers 运行时
  */
 
-// NOTE: 速率限制在 Cloudflare 环境下建议使用 KV 存储，这里先实现一个基于内存的简单版本 (不跨实例共享)
+// NOTE: Cloudflare Pages Functions 是无状态的，内存速率限制无法跨实例共享。
+// 生产环境应使用 Cloudflare Rate Limiting Rules（在 Dashboard 中配置）
+// 或 Cloudflare KV / Durable Objects 实现分布式速率限制。
+// 此内存版本仅作为单实例内的基本防护。
 const rateLimitStore = new Map();
 const RATE_LIMIT = {
     windowMs: 60 * 1000,
@@ -28,7 +31,15 @@ function checkRateLimit(ip) {
     };
 }
 
-const ALLOWED_HOSTS = [
+/** 允许的前端来源（CORS） */
+const ALLOWED_ORIGINS = [
+    'https://music.weny888.com',
+    'http://localhost:5173',
+    'http://localhost:4173',
+];
+
+/** 精确匹配的主机名 */
+const ALLOWED_HOSTS_EXACT = new Set([
     // 音乐 API 源
     'music-api.gdstudio.xyz',
     'api.injahow.cn',
@@ -63,13 +74,26 @@ const ALLOWED_HOSTS = [
     'other.web.nf01.sycdn.kuwo.cn',
     'other.web.ra01.sycdn.kuwo.cn',
     // JOOX CDN
-    'joox.com',
     'api.joox.com',
     // 喜马拉雅 CDN
-    'ximalaya.com',
     'fdfs.xmcdn.com',
-    'aod.cos.tx.xmcdn.com'
+    'aod.cos.tx.xmcdn.com',
+]);
+
+/** 允许子域名匹配的后缀（仅限已知 CDN 模式） */
+const ALLOWED_HOST_SUFFIXES = [
+    '.music.126.net',
+    '.stream.qqmusic.qq.com',
+    '.kugou.com',
+    '.sycdn.kuwo.cn',
+    '.xmcdn.com',
+    '.nf.migu.cn',
 ];
+
+function isHostAllowed(hostname) {
+    if (ALLOWED_HOSTS_EXACT.has(hostname)) return true;
+    return ALLOWED_HOST_SUFFIXES.some(suffix => hostname.endsWith(suffix));
+}
 
 const NETEASE_COOKIE_HOSTS = [
     'music.163.com',
@@ -108,16 +132,25 @@ export async function onRequest(context) {
     // 2. 安全检查
     try {
         const parsedTarget = new URL(decodedUrl);
-        const isAllowed = ALLOWED_HOSTS.some(host =>
-            parsedTarget.hostname === host || parsedTarget.hostname.endsWith('.' + host)
-        );
 
-        if (!isAllowed) {
+        // 协议验证：仅允许 http/https
+        if (parsedTarget.protocol !== 'http:' && parsedTarget.protocol !== 'https:') {
+            return new Response(JSON.stringify({ error: 'Invalid protocol' }), {
+                status: 400,
+                headers: { 'Content-Type': 'application/json' }
+            });
+        }
+
+        if (!isHostAllowed(parsedTarget.hostname)) {
             return new Response(JSON.stringify({ error: 'URL not allowed' }), {
                 status: 403,
                 headers: { 'Content-Type': 'application/json' }
             });
         }
+
+        // CORS 来源验证
+        const requestOrigin = request.headers.get('Origin') || '';
+        const corsOrigin = ALLOWED_ORIGINS.includes(requestOrigin) ? requestOrigin : ALLOWED_ORIGINS[0];
 
         // 3. 构建请求头
         const refererMap = {
@@ -162,14 +195,6 @@ export async function onRequest(context) {
 
         if (vipCookie && isNeteaseHost) {
             headers.set('Cookie', vipCookie);
-            // 处理部分部署需要 query 传参的情况
-            if (parsedTarget.hostname.includes('w7z.indevs.in') ||
-                parsedTarget.hostname.includes('i-meto.com') ||
-                parsedTarget.hostname.includes('vercel.app')) {
-                if (!parsedTarget.searchParams.has('cookie')) {
-                    parsedTarget.searchParams.set('cookie', vipCookie);
-                }
-            }
         }
 
         // 4. 发起上游请求
@@ -181,7 +206,7 @@ export async function onRequest(context) {
 
         // 5. 转发响应
         const newHeaders = new Headers(response.headers);
-        newHeaders.set('Access-Control-Allow-Origin', '*'); // Cloudflare 端允许所有
+        newHeaders.set('Access-Control-Allow-Origin', corsOrigin);
         newHeaders.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
         newHeaders.set('Access-Control-Allow-Headers', 'Content-Type');
 
@@ -197,7 +222,8 @@ export async function onRequest(context) {
         });
 
     } catch (error) {
-        return new Response(JSON.stringify({ error: 'Failed to proxy request', message: error.message }), {
+        console.error('[proxy] Request failed:', error.message);
+        return new Response(JSON.stringify({ error: 'Failed to proxy request' }), {
             status: 500,
             headers: { 'Content-Type': 'application/json' }
         });
