@@ -728,7 +728,7 @@ export function displayAlbumGrid(
     }
 
     if (albums.length === 0 && !append) {
-        container.innerHTML = `<div class="empty-state" style="grid-column: 1/-1;"><i class="fas fa-compact-disc"></i><div>暂无专辑数据</div></div>`;
+        container.innerHTML = `<div class="empty-state"><i class="fas fa-compact-disc"></i><div>暂无专辑数据</div></div>`;
         return;
     }
 
@@ -739,14 +739,18 @@ export function displayAlbumGrid(
         card.className = 'album-card';
 
         const coverUrl = album.picUrl
-            ? `${album.picUrl}?param=150y150`
+            ? `${album.picUrl}?param=100y100`
             : 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHZpZXdCb3g9IjAgMCA2NCA2NCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHJ4PSI4IiBmaWxsPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMSkiLz48dGV4dCB4PSIzMiIgeT0iNDAiIGZvbnQtc2l6ZT0iMjQiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4zKSI+8J6OtTwvdGV4dD48L3N2Zz4=';
         const year = album.publishTime ? new Date(album.publishTime).getFullYear() : '';
+        const sizePart = album.size ? `${album.size}首` : '';
+        const metaParts = [year, sizePart].filter(Boolean).join(' · ');
 
         card.innerHTML = `
             <img class="album-cover" src="${escapeHtml(coverUrl)}" alt="${escapeHtml(album.name)}" loading="lazy">
-            <div class="album-name">${escapeHtml(album.name)}</div>
-            ${year ? `<div class="album-year">${year}</div>` : ''}
+            <div class="album-info">
+                <div class="album-name">${escapeHtml(album.name)}</div>
+                ${metaParts ? `<div class="album-year">${metaParts}</div>` : ''}
+            </div>
         `;
 
         card.addEventListener('click', () => onClick(album));

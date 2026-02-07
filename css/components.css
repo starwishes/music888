@@ -1200,11 +1200,8 @@
     color: var(--color-primary);
 }
 
-/* === Artist Album Grid === */
+/* === Artist Album List === */
 .artist-album-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
     overflow-y: auto;
     flex: 1;
     min-height: 0;
@@ -1212,42 +1209,46 @@
     scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
 }
 
-.artist-album-grid .load-more-btn {
-    grid-column: 1 / -1;
-}
-
 .album-card {
-    text-align: center;
-    padding: 15px 10px;
-    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border-radius: 10px;
     cursor: pointer;
     transition: all 0.3s ease;
+    margin-bottom: 8px;
 }
 
 .album-card:hover {
     background: rgba(255, 255, 255, 0.1);
-    transform: translateY(-2px);
+    transform: translateY(-1px);
 }
 
 .album-cover {
-    width: 64px;
-    height: 64px;
+    width: 50px;
+    height: 50px;
     border-radius: 8px;
     object-fit: cover;
-    margin-bottom: 8px;
+    flex-shrink: 0;
+}
+
+.album-info {
+    flex: 1;
+    min-width: 0;
 }
 
 .album-name {
-    font-size: 13px;
+    font-size: 14px;
+    font-weight: 600;
     color: #fff;
-    font-weight: 500;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    margin-bottom: 4px;
 }
 
 .album-year {
-    font-size: 11px;
-    color: rgba(255, 255, 255, 0.5);
-    margin-top: 2px;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.6);
 }

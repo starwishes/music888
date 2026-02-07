@@ -334,29 +334,24 @@
         font-size: 16px;
     }
 
-    /* === 专辑网格移动端 === */
-    .artist-album-grid {
-        grid-template-columns: repeat(3, 1fr);
-        gap: 10px;
-        padding: 0 5px;
-    }
-
+    /* === 专辑列表移动端 === */
     .album-card {
-        padding: 12px 8px;
+        padding: 10px;
+        gap: 10px;
     }
 
     .album-cover {
-        width: 56px;
-        height: 56px;
+        width: 44px;
+        height: 44px;
         border-radius: 6px;
     }
 
     .album-name {
-        font-size: 12px;
+        font-size: 14px;
     }
 
     .album-year {
-        font-size: 10px;
+        font-size: 11px;
     }
 
     .artist-desc-text {
@@ -722,19 +717,18 @@
         gap: 8px;
     }
 
-    /* 专辑网格2列 */
-    .artist-album-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 8px;
-    }
-
+    /* 专辑封面更小 */
     .album-cover {
-        width: 48px;
-        height: 48px;
+        width: 40px;
+        height: 40px;
     }
 
     .album-name {
-        font-size: 11px;
+        font-size: 13px;
+    }
+
+    .album-year {
+        font-size: 10px;
     }
 
     .artist-card {
@@ -863,7 +857,6 @@
 
     .album-card:hover {
         transform: none;
-        background: transparent;
     }
 
     .radio-item:hover {
