@@ -4,6 +4,13 @@
  */
 
 /**
+ * 确保 URL 使用 HTTPS 协议（CSP 要求）
+ */
+export function ensureHttps(url: string): string {
+    return url.replace(/^http:\/\//, 'https://');
+}
+
+/**
  * HTML 转义函数，防止 XSS 攻击
  * @param text 需要转义的文本
  * @returns 转义后的安全 HTML 字符串

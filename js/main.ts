@@ -5,7 +5,7 @@
 import * as api from './api';
 import * as ui from './ui';
 import * as player from './player';
-import { getElement } from './utils';
+import { getElement, ensureHttps } from './utils';
 import { MusicError, ArtistInfo, AlbumInfo, RadioStation, RadioProgram, RadioCategory, Song, UserPlaylist } from './types';
 import { logger } from './config';
 import { initPerformanceMonitoring } from './perf';
@@ -679,7 +679,7 @@ async function handleArtistClick(artist: ArtistInfo): Promise<void> {
 
     // 渲染歌手头部信息
     if (artistDetailHeader) {
-        const avatarUrl = artist.picUrl ? `${artist.picUrl}?param=96y96` : '';
+        const avatarUrl = artist.picUrl ? ensureHttps(`${artist.picUrl}?param=96y96`) : '';
         const metaParts: string[] = [];
         if (artist.musicSize) metaParts.push(`${artist.musicSize}首歌曲`);
         if (artist.albumSize) metaParts.push(`${artist.albumSize}张专辑`);
@@ -778,7 +778,7 @@ async function handleAlbumClick(album: AlbumInfo): Promise<void> {
 
     // 渲染专辑头部
     if (albumSongsHeader) {
-        const coverUrl = album.picUrl ? `${album.picUrl}?param=96y96` : '';
+        const coverUrl = album.picUrl ? ensureHttps(`${album.picUrl}?param=96y96`) : '';
         const year = album.publishTime ? new Date(album.publishTime).getFullYear() : '';
         const sizePart = album.size ? `${album.size}首` : '';
         const metaParts = [year, sizePart].filter(Boolean).join(' · ');
@@ -897,7 +897,7 @@ async function handleRadioClick(radio: RadioStation): Promise<void> {
 
     // 渲染电台头部
     if (radioProgramsHeader) {
-        const coverUrl = radio.picUrl ? `${radio.picUrl}?param=96y96` : '';
+        const coverUrl = radio.picUrl ? ensureHttps(`${radio.picUrl}?param=96y96`) : '';
         radioProgramsHeader.innerHTML = `
             ${coverUrl ? `<img src="${coverUrl}" alt="${radio.name}">` : ''}
             <span class="radio-header-name">${radio.name}</span>
@@ -1145,7 +1145,7 @@ function renderUserPlaylistList(playlists: UserPlaylist[], radios: RadioStation[
     for (const radio of radios) {
         const item = document.createElement('div');
         item.className = 'playlist-item';
-        const coverUrl = radio.picUrl ? `${radio.picUrl}?param=80y80` : '';
+        const coverUrl = radio.picUrl ? ensureHttps(`${radio.picUrl}?param=80y80`) : '';
         item.innerHTML = `
             ${coverUrl ? `<img class="playlist-item-cover" src="${coverUrl}" alt="${radio.name}" loading="lazy">` : ''}
             <div class="playlist-item-info">

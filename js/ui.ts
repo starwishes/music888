@@ -1,7 +1,7 @@
 import * as api from './api';
 import { Song, LyricLine, DOMCache, ScrollState, NotificationType, ArtistInfo, AlbumInfo, RadioStation, RadioProgram } from './types';
 import * as player from './player';
-import { escapeHtml, formatTime, getElement } from './utils';
+import { escapeHtml, formatTime, getElement, ensureHttps } from './utils';
 import { APP_CONFIG, logger } from './config';
 
 // --- DOM Element Cache ---
@@ -572,7 +572,7 @@ export function displayArtistGrid(
         card.className = 'artist-card';
 
         const avatarUrl = artist.picUrl
-            ? `${artist.picUrl}?param=120y120`
+            ? ensureHttps(`${artist.picUrl}?param=120y120`)
             : 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHZpZXdCb3g9IjAgMCA2NCA2NCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIzMiIgY3k9IjMyIiByPSIzMiIgZmlsbD0icmdiYSgyNTUsMjU1LDI1NSwwLjEpIi8+PHRleHQgeD0iMzIiIHk9IjQwIiBmb250LXNpemU9IjI0IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMykiPu+ZjjwvdGV4dD48L3N2Zz4=';
 
         card.innerHTML = `
@@ -632,7 +632,7 @@ export function displayRadioList(
         item.className = 'radio-item';
 
         const coverUrl = radio.picUrl
-            ? `${radio.picUrl}?param=100y100`
+            ? ensureHttps(`${radio.picUrl}?param=100y100`)
             : 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCA1MCA1MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHJ4PSI4IiBmaWxsPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMSkiLz48dGV4dCB4PSIyNSIgeT0iMzIiIGZvbnQtc2l6ZT0iMjAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4zKSI+8J+OmTwvdGV4dD48L3N2Zz4=';
         const djName = radio.dj?.nickname || '未知主播';
         const meta = radio.programCount ? `${radio.programCount} 期` : '';
@@ -739,7 +739,7 @@ export function displayAlbumGrid(
         card.className = 'album-card';
 
         const coverUrl = album.picUrl
-            ? `${album.picUrl}?param=100y100`
+            ? ensureHttps(`${album.picUrl}?param=100y100`)
             : 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHZpZXdCb3g9IjAgMCA2NCA2NCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHJ4PSI4IiBmaWxsPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMSkiLz48dGV4dCB4PSIzMiIgeT0iNDAiIGZvbnQtc2l6ZT0iMjQiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4zKSI+8J6OtTwvdGV4dD48L3N2Zz4=';
         const year = album.publishTime ? new Date(album.publishTime).getFullYear() : '';
         const sizePart = album.size ? `${album.size}首` : '';
